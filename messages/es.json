@@ -1,0 +1,46 @@
+{
+  "HomePage": {
+    "title": "Bienvenido a SuporTicket",
+    "subtitle": "Gestión de soporte técnico eficiente"
+  },
+  "Navigation": {
+    "home": "Inicio",
+    "dashboard": "Panel",
+    "login": "Iniciar Sesión"
+  },
+  "Triage": {
+    "title": "Nuevo Ticket de Soporte",
+    "customer": "Datos del Cliente",
+    "device": "Datos del Equipo",
+    "brand": "Marca",
+    "category": "Categoría",
+    "model": "Modelo",
+    "serial": "Número de Serie",
+    "issue": "Descripción del Problema",
+    "submit": "Crear Ticket",
+    "questions": {
+      "cools": "¿Enfría?",
+      "noise": "¿Hace ruidos extraños?",
+      "leak": "¿Tiene fuga de agua?",
+      "gas": "¿Olor a gas?",
+      "power": "¿Enciende?",
+      "sparks": "¿Saca chispas?"
+    }
+  },
+  "Technician": {
+    "title": "Ruta de Servicio",
+    "status": {
+      "PENDING": "Pendiente",
+      "IN_PROGRESS": "En Proceso",
+      "FINISHED": "Finalizado"
+    },
+    "details": "Detalles del Ticket",
+    "start": "Iniciar Trabajo",
+    "finish": "Finalizar Trabajo",
+    "upload": "Subir Evidencia",
+    "parts": "Repuestos",
+    "labor": "Mano de Obra",
+    "total": "Total",
+    "invoice": "Generar Factura"
+  }
+}

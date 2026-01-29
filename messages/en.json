@@ -1,0 +1,46 @@
+{
+    "HomePage": {
+        "title": "Welcome to SuporTicket",
+        "subtitle": "Efficient technical support management"
+    },
+    "Navigation": {
+        "home": "Home",
+        "dashboard": "Dashboard",
+        "login": "Login"
+    },
+    "Triage": {
+        "title": "New Support Ticket",
+        "customer": "Customer Details",
+        "device": "Device Details",
+        "brand": "Brand",
+        "category": "Category",
+        "model": "Model",
+        "serial": "Serial Number",
+        "issue": "Issue Description",
+        "submit": "Create Ticket",
+        "questions": {
+            "cools": "Does it cool?",
+            "noise": "Makes strange noises?",
+            "leak": "Water leak?",
+            "gas": "Gas smell?",
+            "power": "Turns on?",
+            "sparks": "Sparks?"
+        }
+    },
+    "Technician": {
+        "title": "Service Route",
+        "status": {
+            "PENDING": "Pending",
+            "IN_PROGRESS": "In Progress",
+            "FINISHED": "Finished"
+        },
+        "details": "Ticket Details",
+        "start": "Start Job",
+        "finish": "Finish Job",
+        "upload": "Upload Evidence",
+        "parts": "Spare Parts",
+        "labor": "Labor Cost",
+        "total": "Total",
+        "invoice": "Generate Invoice"
+    }
+}

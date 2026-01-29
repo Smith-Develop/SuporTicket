@@ -1,0 +1,145 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Brand {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  tickets Ticket[]
+}
+
+model Category {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  slug    String   @unique
+  prefix  String   @default("GEN") // For Ticket ID (e.g. LV, AI)
+  tickets Ticket[]
+}
+
+model Ticket {
+  id                 String   @id @default(cuid())
+  ticketNumber       Int      @default(0) // Sequential number
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  status             String   @default("PENDING") // PENDING, IN_PROGRESS, FINISHED, CANCELLED
+  priority           String   @default("MEDIUM") // LOW, MEDIUM, HIGH
+  cancellationReason String? // Justification for CANCELLED status
+
+  // Customer Info - NOW LINKED TO CUSTOMER MODEL
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id])
+  customerName  String
+  customerPhone String
+  contactMethod String?
+
+  // Detailed Address (Enhanced)
+  addressStreet String @default("")
+  addressColony String @default("")
+  addressZip    String @default("")
+  addressCity   String @default("")
+  propertyType  String @default("RESIDENTIAL") // RESIDENTIAL, COMMERCIAL
+
+  // Device Info
+  brandId      Int
+  brand        Brand    @relation(fields: [brandId], references: [id])
+  categoryId   Int
+  category     Category @relation(fields: [categoryId], references: [id])
+  model        String?
+  serialNumber String?
+
+  // Triage
+  issueDescription String
+  triageData       String // JSON
+
+  // Tech
+  technicianId String?
+  technician   User?   @relation(fields: [technicianId], references: [id])
+
+  // Media
+  photos Photo[]
+
+  // Costs
+  laborCost Float @default(0)
+  partsCost Float @default(0)
+  totalCost Float @default(0)
+
+  invoiceUrl   String?
+  signatureUrl String?
+
+  // Closing Info
+  technicianNotes String?
+  isRepaired      Boolean @default(false)
+
+  // Invoice Specific Data (Snapshot)
+  invoiceName    String?
+  invoiceTaxId   String?
+  invoiceEmail   String?
+  invoiceAddress String?
+
+  includeIva           Boolean @default(true)
+  appliedIvaPercentage Float   @default(21.0)
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  phone     String   @unique
+  email     String?
+  address   String?
+  documentNumber String?  @unique
+  tickets   Ticket[]
+}
+
+model User {
+  id       String   @id @default(cuid())
+  email    String   @unique
+  name     String?
+  password String? // Made optional for existing users
+  phone    String?
+  role     String   @default("TECHNICIAN")
+  tickets  Ticket[]
+}
+
+model Photo {
+  id       String @id @default(cuid())
+  url      String
+  type     String // INITIAL, FINAL
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+}
+
+model SparePart {
+  id    Int    @id @default(autoincrement())
+  name  String
+  sku   String @unique
+  price Float
+  stock Int    @default(0)
+}
+
+model CompanySettings {
+  id             Int      @id @default(1)
+  name           String   @default("My Company")
+  taxId          String   @default("") // CIF/NIF
+  address        String   @default("")
+  phone          String   @default("")
+  email          String   @default("")
+  logoUrl        String?  @default("")
+  ivaPercentage  Float    @default(21.0)
+  currencySymbol String   @default("EUR")
+  currencyCode   String   @default("EUR")
+  countryCode    String   @default("34") // For WhatsApp format
+  
+  // Cloudinary
+  cloudinaryCloudName String @default("")
+  cloudinaryApiKey    String @default("")
+  cloudinaryApiSecret String @default("")
+
+  updatedAt      DateTime @updatedAt
+}
