@@ -31,6 +31,7 @@ export default function TicketActions({ ticket, settings }: { ticket: any, setti
     const [showCancelModal, setShowCancelModal] = useState(false)
     const [cancellationReason, setCancellationReason] = useState('')
     const [uploading, setUploading] = useState<string | null>(null)
+    const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
     const handleOpenInvoice = async () => {
         // Save closing data first
@@ -78,96 +79,100 @@ export default function TicketActions({ ticket, settings }: { ticket: any, setti
         return new Intl.NumberFormat('es-ES', { style: 'currency', currency }).format(amount)
     }
 
-    // ...
-
-
     return (
-        <div className="p-4 md:p-6 bg-gray-50 dark:bg-zinc-950 min-h-screen pb-32 max-w-5xl mx-auto">
+        <div className="p-4 md:p-6 bg-gray-50 dark:bg-zinc-950 min-h-screen pb-32 max-w-5xl mx-auto" suppressHydrationWarning>
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
                     <button
                         onClick={() => router.back()}
-                        className="text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 mb-2 flex items-center gap-1"
+                        className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 mb-2 flex items-center gap-1 text-sm font-medium transition"
                     >
-                        &larr; Volver al Panel
+                        &larr; Volver
                     </button>
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold font-mono">
-                            #{formatTicketId(ticket)}
-                        </span>
-                        <span className="text-gray-400 text-xs">
-                            {new Date(ticket.createdAt).toLocaleDateString()}
-                        </span>
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+                        Ticket #{formatTicketId(ticket)}
+                    </h1>
+                    <div className="flex items-center gap-2 text-gray-500 mt-1 text-sm">
+                        <Clock size={16} />
+                        <span>creado el {new Date(ticket.createdAt).toLocaleDateString('es-ES', { timeZone: 'UTC' })}</span>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">{ticket.category.name} {ticket.brand.name}</h1>
                 </div>
-            </div>
+
+                <div className="flex items-center gap-3">
+                    <span className={`px-4 py-2 rounded-full text-sm font-bold border ${ticket.priority === 'HIGH' ? 'bg-red-100 text-red-700 border-red-200' :
+                        ticket.priority === 'MEDIUM' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                            'bg-blue-100 text-blue-700 border-blue-200'
+                        }`}>
+                        {ticket.priority === 'HIGH' ? '🔥 Alta Prioridad' : ticket.priority === 'MEDIUM' ? '⚡ Prioridad Media' : 'ℹ️ Normal'}
+                    </span>
+                </div>
+            </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* Left Column: Details */}
                 <div className="lg:col-span-2 space-y-6">
-
                     {/* Status Card */}
                     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 p-6">
-                        <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Estado del Servicio</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <button
-                                onClick={() => handleStatusChange('PENDING')}
-                                disabled={ticket.status === 'FINISHED' || ticket.status === 'CANCELLED'}
-                                className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition disabled:opacity-50 disabled:cursor-not-allowed ${status === 'PENDING'
-                                    ? 'border-gray-400 bg-gray-50 text-gray-800'
-                                    : 'border-transparent bg-gray-50 text-gray-400 hover:bg-gray-100'
-                                    }`}
-                            >
-                                <Clock size={24} className="mb-2" />
-                                <span className="text-xs font-bold">Pendiente</span>
-                            </button>
-                            <button
-                                onClick={() => handleStatusChange('IN_PROGRESS')}
-                                disabled={ticket.status === 'FINISHED' || ticket.status === 'CANCELLED'}
-                                className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition disabled:opacity-50 disabled:cursor-not-allowed ${status === 'IN_PROGRESS'
-                                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                    : 'border-transparent bg-gray-50 text-gray-400 hover:bg-gray-100'
-                                    }`}
-                            >
-                                <PlayCircle size={24} className="mb-2" />
-                                <span className="text-xs font-bold">En Proceso</span>
-                            </button>
-                            <button
-                                onClick={() => handleStatusChange('FINISHED')}
-                                disabled={ticket.status === 'FINISHED' || ticket.status === 'CANCELLED'}
-                                className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition disabled:opacity-50 disabled:cursor-not-allowed ${status === 'FINISHED'
-                                    ? 'border-green-500 bg-green-50 text-green-700'
-                                    : 'border-transparent bg-gray-50 text-gray-400 hover:bg-gray-100'
-                                    }`}
-                            >
-                                <CheckCircle size={24} className="mb-2" />
-                                <span className="text-xs font-bold">Finalizado</span>
-                            </button>
+                        <h3 className="font-bold text-gray-500 text-xs uppercase mb-4 tracking-wider">Estado del Servicio</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            {['PENDING', 'IN_PROGRESS', 'FINISHED', 'CANCELLED'].map((s) => (
+                                <button
+                                    key={s}
+                                    onClick={() => handleStatusChange(s)}
+                                    disabled={loading || status === 'FINISHED' || status === 'CANCELLED'}
+                                    className={`p-3 rounded-lg border-2 font-bold text-xs md:text-sm transition flex flex-col items-center justify-center gap-2 ${status === s
+                                        ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                                        : 'border-transparent bg-gray-50 text-gray-500 hover:bg-gray-100 dark:bg-zinc-800 dark:text-gray-400'
+                                        } ${s === 'CANCELLED' && status === s ? 'border-red-600 bg-red-50 text-red-700' : ''}`}
+                                >
+                                    {s === 'PENDING' && <Clock size={20} />}
+                                    {s === 'IN_PROGRESS' && <PlayCircle size={20} />}
+                                    {s === 'FINISHED' && <CheckCircle size={20} />}
+                                    {s === 'CANCELLED' && <XCircle size={20} />}
+                                    <span>{s === 'PENDING' ? 'Pendiente' : s === 'IN_PROGRESS' ? 'En Proceso' : s === 'FINISHED' ? 'Finalizado' : 'Cancelado'}</span>
+                                </button>
+                            ))}
+                        </div>
+                        {status === 'CANCELLED' && ticket.cancellationReason && (
+                            <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-lg text-sm text-red-700 dark:text-red-400">
+                                <span className="font-bold">Motivo:</span> {ticket.cancellationReason}
+                            </div>
+                        )}
+                        {(status !== 'CANCELLED' && status !== 'FINISHED') && (
                             <button
                                 onClick={() => setShowCancelModal(true)}
-                                disabled={ticket.status === 'FINISHED' || ticket.status === 'CANCELLED'}
-                                className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition disabled:opacity-50 disabled:cursor-not-allowed ${status === 'CANCELLED'
-                                    ? 'border-red-500 bg-red-50 text-red-700'
-                                    : 'border-transparent bg-gray-50 text-gray-400 hover:bg-gray-100'
-                                    }`}
+                                className="mt-4 text-xs text-red-500 hover:underline flex items-center gap-1"
                             >
-                                <AlertCircle size={24} className="mb-2" />
-                                <span className="text-xs font-bold">Cancelar</span>
+                                <XCircle size={12} /> Cancelar este servicio
                             </button>
-                        </div>
+                        )}
                     </div>
 
-                    {/* Report & Diagnostic */}
+                    {/* Report Card */}
                     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 p-6">
                         <div className="flex items-center gap-2 mb-4">
                             <AlertCircle className="text-orange-500" />
-                            <h3 className="font-bold text-lg">Reporte de Falla</h3>
+                            <h3 className="font-bold text-lg">Reporte Inicial</h3>
                         </div>
-                        <div className="bg-orange-50 dark:bg-orange-900/10 p-4 rounded-lg text-orange-800 dark:text-orange-200 border border-orange-100 dark:border-orange-800/30">
-                            {ticket.issueDescription}
+
+                        <div className="bg-orange-50 dark:bg-orange-900/10 p-4 rounded-lg border border-orange-100 dark:border-orange-900/30 mb-6">
+                            <h4 className="font-bold text-orange-800 dark:text-orange-400 mb-1 text-sm">Problema Reportado</h4>
+                            <p className="text-gray-800 dark:text-gray-200 text-lg leading-relaxed">
+                                {ticket.issueDescription}
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg">
+                                <span className="block text-xs text-gray-500 uppercase font-bold mb-1">Equipo</span>
+                                <span className="font-medium">{ticket.brand?.name || 'Genérico'} - {ticket.model || 'Sin Modelo'}</span>
+                            </div>
+                            <div className="p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg">
+                                <span className="block text-xs text-gray-500 uppercase font-bold mb-1">Serie / SN</span>
+                                <span className="font-medium font-mono">{ticket.serialNumber || 'N/A'}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -187,15 +192,21 @@ export default function TicketActions({ ticket, settings }: { ticket: any, setti
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     {ticket.photos.filter((p: any) => p.type === 'INITIAL').map((p: any) => (
-                                        <div key={p.id} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                                        <div
+                                            key={p.id}
+                                            onClick={() => setSelectedImage(p.url)}
+                                            className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer hover:opacity-90 transition"
+                                        >
                                             <Image src={p.url} alt="Evidencia" fill className="object-cover" />
                                         </div>
                                     ))}
-                                    <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-blue-400 transition text-gray-400 hover:text-blue-500">
-                                        <input type="file" className="hidden" onChange={(e) => handlePhotoUpload(e, 'INITIAL')} accept="image/*" />
-                                        <Camera size={24} />
-                                        <span className="text-xs font-medium mt-1">Agregar</span>
-                                    </label>
+                                    {(ticket.status !== 'FINISHED' && ticket.status !== 'CANCELLED') && (
+                                        <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-blue-400 transition text-gray-400 hover:text-blue-500">
+                                            <input type="file" className="hidden" onChange={(e) => handlePhotoUpload(e, 'INITIAL')} accept="image/*" />
+                                            <Camera size={24} />
+                                            <span className="text-xs font-medium mt-1">Agregar</span>
+                                        </label>
+                                    )}
                                 </div>
                             </div>
 
@@ -207,22 +218,29 @@ export default function TicketActions({ ticket, settings }: { ticket: any, setti
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     {ticket.photos.filter((p: any) => p.type === 'FINAL').map((p: any) => (
-                                        <div key={p.id} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                                        <div
+                                            key={p.id}
+                                            onClick={() => setSelectedImage(p.url)}
+                                            className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer hover:opacity-90 transition"
+                                        >
                                             <Image src={p.url} alt="Evidencia" fill className="object-cover" />
                                         </div>
                                     ))}
-                                    <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-blue-400 transition text-gray-400 hover:text-blue-500">
-                                        <input type="file" className="hidden" onChange={(e) => handlePhotoUpload(e, 'FINAL')} accept="image/*" />
-                                        <Camera size={24} />
-                                        <span className="text-xs font-medium mt-1">Agregar</span>
-                                    </label>
+                                    {(ticket.status !== 'FINISHED' && ticket.status !== 'CANCELLED') && (
+                                        <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-blue-400 transition text-gray-400 hover:text-blue-500">
+                                            <input type="file" className="hidden" onChange={(e) => handlePhotoUpload(e, 'FINAL')} accept="image/*" />
+                                            <Camera size={24} />
+                                            <span className="text-xs font-medium mt-1">Agregar</span>
+                                        </label>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Right Column: Customer & Costs */}
+                {/* Right Column: Customer & Costs ... */}
+                {/* ... (Existing Customer & Costs UI) ... */}
                 <div className="space-y-6">
                     {/* Customer Card */}
                     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 p-6">
@@ -348,27 +366,32 @@ export default function TicketActions({ ticket, settings }: { ticket: any, setti
                         </div>
                     </div>
 
-                    {/* Closing Info (Visible only when costs are saved/locked which usually happens before finishing) */}
-                    {Number(ticket.laborCost) + Number(ticket.partsCost) > 0 && (
-                        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                                <FileText className="text-purple-600" />
-                                <h3 className="font-bold text-lg">Cierre del Servicio</h3>
+                    {/* Closing Info */}
+                    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-800 p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <FileText className="text-purple-600" />
+                            <h3 className="font-bold text-lg">Cierre del Servicio</h3>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Observaciones del Técnico</label>
+                                <textarea
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    disabled={ticket.status === 'FINISHED' || ticket.status === 'CANCELLED'}
+                                    className="w-full p-3 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-24 text-sm disabled:opacity-70"
+                                    placeholder="Detalles sobre la reparación, recomendaciones, o razones por las que no se pudo reparar..."
+                                />
                             </div>
 
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Observaciones del Técnico</label>
-                                    <textarea
-                                        value={notes}
-                                        onChange={(e) => setNotes(e.target.value)}
-                                        className="w-full p-3 bg-gray-50 dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-24 text-sm"
-                                        placeholder="Detalles sobre la reparación, recomendaciones, o razones por las que no se pudo reparar..."
-                                    />
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">¿Equipo Reparado?</span>
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">¿Equipo Reparado?</span>
+                                {ticket.status === 'FINISHED' || ticket.status === 'CANCELLED' ? (
+                                    <span className={`px-4 py-2 rounded-lg text-sm font-bold ${isRepaired ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                        {isRepaired ? 'SI' : 'NO'}
+                                    </span>
+                                ) : (
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => setIsRepaired(true)}
@@ -389,33 +412,34 @@ export default function TicketActions({ ticket, settings }: { ticket: any, setti
                                             NO
                                         </button>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </div>
-                    )}
+                    </div>
 
                 </div>
-                {/* Floating Action */}
-                {status === 'FINISHED' && (
-                    <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-8 md:w-auto z-50">
-                        <button
-                            onClick={handleOpenInvoice}
-                            className="w-full md:w-auto px-8 bg-black hover:bg-gray-800 text-white shadow-xl shadow-black/20 py-4 rounded-full flex items-center justify-center gap-2 font-bold text-lg transition transform hover:-translate-y-1"
-                        >
-                            <FileText />
-                            {ticket.signatureUrl ? 'Descargar Reporte Firmado' : 'Finalizar y Generar Reporte'}
-                        </button>
-                    </div>
-                )}
-
-                {showInvoice && (
-                    <InvoiceModal
-                        ticket={{ ...ticket, technicianNotes: notes, isRepaired, laborCost: labor, partsCost: parts, includeIva, ivaRate }}
-                        settings={settings}
-                        onClose={() => setShowInvoice(false)}
-                    />
-                )}
             </div>
+
+            {/* Floating Action */}
+            {status === 'FINISHED' && (
+                <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-8 md:w-auto z-50">
+                    <button
+                        onClick={handleOpenInvoice}
+                        className="w-full md:w-auto px-8 bg-black hover:bg-gray-800 text-white shadow-xl shadow-black/20 py-4 rounded-full flex items-center justify-center gap-2 font-bold text-lg transition transform hover:-translate-y-1"
+                    >
+                        <FileText />
+                        {ticket.signatureUrl ? 'Descargar Reporte Firmado' : 'Finalizar y Generar Reporte'}
+                    </button>
+                </div>
+            )}
+
+            {showInvoice && (
+                <InvoiceModal
+                    ticket={{ ...ticket, technicianNotes: notes, isRepaired, laborCost: labor, partsCost: parts, includeIva, ivaRate }}
+                    settings={settings}
+                    onClose={() => setShowInvoice(false)}
+                />
+            )}
 
             {/* Cancel Modal */}
             {showCancelModal && (
@@ -441,6 +465,30 @@ export default function TicketActions({ ticket, settings }: { ticket: any, setti
                         >
                             {loading ? 'Cancelando...' : 'Confirmar Cancelación'}
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Image Viewer Modal */}
+            {selectedImage && (
+                <div
+                    className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out"
+                    onClick={() => setSelectedImage(null)}
+                >
+                    <div className="relative w-full max-w-4xl max-h-[90vh] aspect-auto">
+                        <button
+                            className="absolute -top-10 right-0 text-white hover:text-gray-300 p-2"
+                            onClick={() => setSelectedImage(null)}
+                        >
+                            <XCircle size={32} />
+                        </button>
+                        <Image
+                            src={selectedImage}
+                            alt="Evidencia Full Screen"
+                            fill
+                            className="object-contain"
+                            priority
+                        />
                     </div>
                 </div>
             )}

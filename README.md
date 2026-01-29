@@ -12,31 +12,32 @@ Diseñado pensando en la **movilidad** para los técnicos y el **control total**
 
 ## ✨ Características Principales
 
-- **�️ Roles y Permisos Granulares**: Sistema de autenticación con roles diferenciados para **Administradores** (Control total) y **Técnicos** (Vista enfocada en tareas).
-- **📱 App de Técnico 'Mobile First'**: Interfaz PWA-ready diseñada para ser usada en campo. Permite subir evidencias y cerrar tickets con una mano.
+- **🛡️ Roles y Permisos Granulares**: Sistema de autenticación con roles diferenciados para **Administradores** (Control total) y **Técnicos** (Vista enfocada en tareas). Panel de administración accesible desde el dashboard técnico (solo para admins).
+- **📱 App de Técnico 'Mobile First'**: Interfaz PWA-ready. Permite subir evidencias, gestionar estados y ver ingresos estimados. Diseño unificado con el panel de administración.
+- **⚡ Triage Inteligente**: Formulario de recepción con asignación inmediata de técnicos y generación automática de mensajes de bienvenida para WhatsApp.
 - **✍️ Firma Digital Integrada**: Captura la firma del cliente en pantalla táctil al momento de la entrega o aprobación de presupuesto.
 - **📄 Motor de Facturación PDF**: Generación instantánea de documentos profesionales (Presupuestos, Resguardos, Facturas) calculando automáticamente impuestos (IVA) y totales.
 - **☁️ Gestión de Evidencias (Cloudinary)**: Subida de fotos ilimitadas para documentar el estado "Inicial" y "Final" de la reparación, almacenadas de forma segura en la nube.
 - **📊 Dashboard Analítico**: Métricas en tiempo real sobre tickets pendientes, ingresos estimados, productividad técnica y tiempos de resolución.
-- **🌍 Internacionalización (i18n)**: Arquitectura lista para soporte multi-idioma.
+- **🌍 Internacionalización (i18n)**: Arquitectura lista para soporte multi-idioma (Español por defecto).
 - **📦 Control de Inventario**: Gestión básica de marcas, modelos y categorías de dispositivos.
 
 ## 📸 Capturas de Pantalla
 
-### 1. Dashboard Administrativo
-*Vista general con métricas clave, filtros de estado y lista de tickets recientes.*
+### 1. Dashboard Administrativo & Técnico
+*Vista unificada con métricas clave, filtros de estado y acceso rápido a funciones.*
 | Escritorio | Móvil |
 | :---: | :---: |
 | ![Admin Dashboard Desk](INSERTAR_IMAGEN_AQUI) | ![Admin Dashboard Mobile](INSERTAR_IMAGEN_AQUI) |
 
-### 2. App del Técnico (Vista de Lista)
-*Interfaz limpia para que los técnicos vean sus asignaciones y prioridades del día.*
-| Escritorio | Móvil |
-| :---: | :---: |
-| ![Tech List Desk](INSERTAR_IMAGEN_AQUI) | ![Tech List Mobile](INSERTAR_IMAGEN_AQUI) |
+### 2. Triage & Asignación
+*Formulario inteligente para crear tickets, asignar técnicos y notificar por WhatsApp en un solo paso.*
+| Vista Formulario |
+| :---: |
+| ![Triage Form](INSERTAR_IMAGEN_AQUI) |
 
 ### 3. Detalle de Ticket & Diagnóstico
-*Gestión completa de la reparación: descripción del problema, notas técnicas y repuestos.*
+*Gestión completa de la reparación: descripción del problema, notas técnicas, repuestos y checklist de cierre.*
 | Escritorio | Móvil |
 | :---: | :---: |
 | ![Ticket Detail Desk](INSERTAR_IMAGEN_AQUI) | ![Ticket Detail Mobile](INSERTAR_IMAGEN_AQUI) |
@@ -53,10 +54,6 @@ Diseñado pensando en la **movilidad** para los técnicos y el **control total**
 | :---: | :---: |
 | ![Signature Desk](INSERTAR_IMAGEN_AQUI) | ![Signature Mobile](INSERTAR_IMAGEN_AQUI) |
 
-### 6. Configuración & Integraciones
-*Panel para configurar datos de empresa y credenciales API (Cloudinary).*
-![Settings Panel](INSERTAR_IMAGEN_AQUI)
-
 ---
 
 ## 🧩 Arquitectura y Componentes
@@ -64,24 +61,15 @@ Diseñado pensando en la **movilidad** para los técnicos y el **control total**
 La aplicación sigue una arquitectura moderna basada en **Server Actions** de Next.js para minimizar el JavaScript en el cliente y asegurar la integridad de los datos.
 
 ### Lógica de Negocio (`src/app/*-actions.ts`)
-*   **`ticket-actions.ts`**: El núcleo transaccional. Maneja la creación de tickets, transiciones de estado (Pendiente -> En Progreso -> Finalizado) y asignación de técnicos.
-*   **`technician-actions.ts`**: Lógica específica para el rol técnico.
-    *   **`uploadPhoto`**: Procesa `FormData`, autentica con Cloudinary, sube la imagen y guarda la URL segura en la BD.
-    *   **`saveSignature`**: Recibe la firma en Base64, la procesa y la vincula al ticket para el cierre.
-*   **`settings-actions.ts`**: Gestión de la configuración global de la empresa (impuestos, moneda, logos) persistente en base de datos.
-
-### Componentes UI Clave (`src/components/`)
-*   **`InvoiceModal`**: Componente complejo que orquesta el cierre del ticket.
-    *   Integra `react-signature-canvas` para capturar trazos.
-    *   Utiliza `jsPDF` para maquetar vectorialmente el reporte final en el navegador, incrustando las fotos y la firma.
-*   **`AdminTicketList`**: Tabla inteligente con filtrado en servidor y cliente, paginación y estados visuales.
-*   **`AdminLayoutClient`**: Wrapper responsable de la navegación responsiva (Sidebar colapsable en móvil).
+*   **`ticket-actions.ts`**: El núcleo transaccional. Maneja la creación, asignación y estados.
+*   **`technician-actions.ts`**: Lógica para el flujo técnico (fotos, costos, cierre).
+    *   **`uploadPhoto`**: Integración segura con Cloudinary.
+    *   **`saveSignature`**: Digitalización de firmas.
+*   **`settings-actions.ts`**: Configuración global persistente.
 
 ### Base de Datos (Prisma)
-*   **Modelos Relacionales**:
-    *   `Ticket` conecta con `Customer`, `User` (Técnico), `Brand`, `Category`.
-    *   `CompanySettings` almacena configuración singleton para la tenant.
-    *   `Photo` almacena referencias a recursos externos de Cloudinary.
+*   **Modelos Relacionales**: `Ticket`, `Customer`, `User`, `Brand`, `Category`.
+*   **Soporte Multi-DB**: Configurado para funcionar con **PostgreSQL (Supabase)**, MySQL o SQLite.
 
 ---
 
@@ -90,7 +78,8 @@ La aplicación sigue una arquitectura moderna basada en **Server Actions** de Ne
 ### Prerrequisitos
 - Node.js (v18+)
 - npm o pnpm
-- Cuenta en Cloudinary (Gratuita) para almacenamiento de imágenes.
+- Cuenta en Cloudinary (Gratuita)
+- Base de datos PostgreSQL (Recomendado: Supabase) o MongoDB.
 
 ### 1. Instalación Local
 
@@ -106,15 +95,18 @@ La aplicación sigue una arquitectura moderna basada en **Server Actions** de Ne
     ```
 
 3.  **Configurar Entorno**
-    Crea un archivo `.env` en la raíz (puedes copiar un ejemplo si existe):
+    Crea un archivo `.env` en la raíz copiando el ejemplo:
     ```env
-    # Base de datos local SQLite
-    DATABASE_URL="file:./dev.db"
+    # Conexión a Base de Datos (Ej: Supabase Transaction Pooler)
+    DATABASE_URL="postgresql://postgres:[PASSWORD]@db.supabase.co:6543/postgres?pgbouncer=true"
     
-    # URL Base para generación de links
+    # URL Directa (Para migraciones)
+    DIRECT_URL="postgresql://postgres:[PASSWORD]@db.supabase.co:5432/postgres"
+    
+    # URL Base
     NEXT_PUBLIC_BASE_URL="http://localhost:3000"
     
-    # Secretos de Auth (Generar uno seguro en producción)
+    # Secretos
     AUTH_SECRET="tu_secreto_super_seguro"
     ```
 
@@ -130,17 +122,15 @@ La aplicación sigue una arquitectura moderna basada en **Server Actions** de Ne
 
 ### 2. Configuración Post-Instalación
 
-Para que todas las funciones (especialmente imágenes) funcionen:
-
 1.  Accede a `http://localhost:3000/admin`.
 2.  Ve a **Configuración** (Settings).
-3.  Rellena los datos de tu empresa.
-4.  **CRÍTICO**: En la sección "Integraciones", introduce tus credenciales de **Cloudinary** (Cloud Name, API Key, API Secret). Sin esto, la subida de fotos no funcionará.
+3.  Rellena los datos de tu empresa (Logo, NIF, Dirección).
+4.  **Integraciones**: Configura tus credenciales de **Cloudinary** para habilitar la subida de imágenes.
 
 ## 📦 Despliegue
 
-Este proyecto está optimizado para desplegarse en **Vercel** o cualquier host que soporte Node.js/Next.js.
-*Nota: Para despliegue en Vercel, asegúrate de cambiar el provider de Prisma a PostgreSQL o MySQL, ya que SQLite no persiste en funciones serverless efímeramente.*
+Este proyecto está optimizado para desplegarse en **Vercel**.
+*   Asegúrate de configurar las variables de entorno (`DATABASE_URL`, `DIRECT_URL`) en el panel de Vercel.
 
 ---
 

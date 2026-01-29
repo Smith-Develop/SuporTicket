@@ -1,11 +1,12 @@
 'use server'
 
-import { db } from '@/lib/db'
+import { getServicesDb } from '@/lib/services-db'
 import { createSession, logout } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import bcrypt from 'bcryptjs'
 
 export async function loginAction(prevState: any, formData: FormData) {
+    const db = await getServicesDb()
     const email = formData.get('email') as string
     const password = formData.get('password') as string
 

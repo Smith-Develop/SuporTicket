@@ -21,7 +21,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     const settings = await db.companySettings.findFirst()
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black pb-24">
+        <div className="min-h-screen bg-white dark:bg-black pb-24" suppressHydrationWarning>
             <TicketActions ticket={ticket} settings={settings || { name: 'SuporTicket' }} />
         </div>
     )

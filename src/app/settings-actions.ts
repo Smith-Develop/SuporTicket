@@ -1,12 +1,13 @@
 'use server'
 
-import { db } from '@/lib/db'
+import { localDb } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
+import { PrismaClient } from '@prisma/client'
 
 export async function getCompanySettings() {
-    let settings = await db.companySettings.findFirst()
+    let settings = await localDb.companySettings.findFirst()
     if (!settings) {
-        settings = await db.companySettings.create({
+        settings = await localDb.companySettings.create({
             data: { name: 'My Company' }
         })
     }
@@ -30,7 +31,7 @@ export async function updateCompanySettings(prevState: any, formData: FormData) 
     const cloudinaryApiKey = formData.get('cloudinaryApiKey') as string
     const cloudinaryApiSecret = formData.get('cloudinaryApiSecret') as string
 
-    await db.companySettings.updateMany({
+    await localDb.companySettings.updateMany({
         data: {
             name,
             taxId,
@@ -54,3 +55,4 @@ export async function updateCompanySettings(prevState: any, formData: FormData) 
     revalidatePath('/admin/settings')
     return { success: true, message: 'Settings saved' }
 }
+

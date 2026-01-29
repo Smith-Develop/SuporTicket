@@ -1,10 +1,11 @@
 'use server'
 
-import { db } from '@/lib/db'
+import { getServicesDb } from '@/lib/services-db'
 import { revalidatePath } from 'next/cache'
 import bcrypt from 'bcryptjs'
 
 export async function createTechnician(prevState: any, formData: FormData) {
+    const db = await getServicesDb()
     const name = formData.get('name') as string
     const email = formData.get('email') as string
     const phone = formData.get('phone') as string

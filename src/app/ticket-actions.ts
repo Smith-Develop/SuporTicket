@@ -1,9 +1,10 @@
 'use server'
 
-import { db } from '@/lib/db'
+import { getServicesDb } from '@/lib/services-db'
 import { revalidatePath } from 'next/cache'
 
 export async function updateTicket(id: string, prevState: any, formData: FormData) {
+    const db = await getServicesDb()
     const priority = formData.get('priority') as string
     const status = formData.get('status') as string
     const technicianId = formData.get('technicianId') as string
@@ -30,6 +31,7 @@ export async function updateTicket(id: string, prevState: any, formData: FormDat
 }
 
 export async function deleteTicket(id: string) {
+    const db = await getServicesDb()
     try {
         await db.ticket.delete({ where: { id } })
         revalidatePath('/admin')

@@ -1,14 +1,16 @@
 'use client'
 
-import { useActionState } from 'react'
-import { updateCompanySettings } from '@/app/settings-actions'
-import { Save } from 'lucide-react'
+import { useActionState, useState, useRef } from 'react'
+import { updateCompanySettings, testDbConnection } from '@/app/settings-actions'
+import { Save, Check, AlertCircle, Loader2, Database } from 'lucide-react'
 
 export default function SettingsForm({ settings }: { settings: any }) {
     const [state, action] = useActionState(updateCompanySettings, null)
+    const formRef = useRef<HTMLFormElement>(null)
+
 
     return (
-        <form action={action} className="bg-white dark:bg-zinc-900 shadow-sm rounded-xl p-6 border border-gray-200 dark:border-zinc-800">
+        <form ref={formRef} action={action} className="bg-white dark:bg-zinc-900 shadow-sm rounded-xl p-6 border border-gray-200 dark:border-zinc-800">
 
             {state?.success && (
                 <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
@@ -82,6 +84,8 @@ export default function SettingsForm({ settings }: { settings: any }) {
                         </div>
                     </div>
                 </div>
+
+
             </div>
 
             <div className="mt-6 flex justify-end">

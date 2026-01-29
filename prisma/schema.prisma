@@ -1,6 +1,6 @@
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -14,11 +14,12 @@ model Brand {
 }
 
 model Category {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  slug    String   @unique
-  prefix  String   @default("GEN") // For Ticket ID (e.g. LV, AI)
-  tickets Ticket[]
+  id             Int              @id @default(autoincrement())
+  name           String           @unique
+  slug           String           @unique
+  prefix         String           @default("GEN") // For Ticket ID (e.g. LV, AI)
+  tickets        Ticket[]
+  TriageQuestion TriageQuestion[]
 }
 
 model Ticket {
@@ -86,15 +87,15 @@ model Ticket {
 }
 
 model Customer {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  name      String
-  phone     String   @unique
-  email     String?
-  address   String?
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  name           String
+  phone          String   @unique
+  email          String?
+  address        String?
   documentNumber String?  @unique
-  tickets   Ticket[]
+  tickets        Ticket[]
 }
 
 model User {
@@ -124,22 +125,34 @@ model SparePart {
 }
 
 model CompanySettings {
-  id             Int      @id @default(1)
-  name           String   @default("My Company")
-  taxId          String   @default("") // CIF/NIF
-  address        String   @default("")
-  phone          String   @default("")
-  email          String   @default("")
-  logoUrl        String?  @default("")
-  ivaPercentage  Float    @default(21.0)
-  currencySymbol String   @default("EUR")
-  currencyCode   String   @default("EUR")
-  countryCode    String   @default("34") // For WhatsApp format
-  
+  id             Int     @id @default(1)
+  name           String  @default("My Company")
+  taxId          String  @default("") // CIF/NIF
+  address        String  @default("")
+  phone          String  @default("")
+  email          String  @default("")
+  logoUrl        String? @default("")
+  ivaPercentage  Float   @default(21.0)
+  currencySymbol String  @default("EUR")
+  currencyCode   String  @default("EUR")
+  countryCode    String  @default("34") // For WhatsApp format
+
   // Cloudinary
   cloudinaryCloudName String @default("")
   cloudinaryApiKey    String @default("")
   cloudinaryApiSecret String @default("")
 
-  updatedAt      DateTime @updatedAt
+  // External Database
+  externalDbUrl String @default("")
+
+  updatedAt DateTime @updatedAt
+}
+
+model TriageQuestion {
+  id              Int    @id @default(autoincrement())
+  text            String
+  triggerPriority String @default("NONE") // NONE, MEDIUM, HIGH
+
+  categoryId Int? // Null means Global (Applies to all)
+  category   Category? @relation(fields: [categoryId], references: [id])
 }

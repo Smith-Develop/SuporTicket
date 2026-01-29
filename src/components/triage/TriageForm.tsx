@@ -18,6 +18,7 @@ interface TriageFormProps {
     onCancel?: () => void
     isModal?: boolean
     technicians?: any[]
+    triageQuestions?: { id: number; text: string; triggerPriority: string; categoryId: number | null }[]
 }
 
 const initialState = {
@@ -26,10 +27,16 @@ const initialState = {
     ticketId: '',
 }
 
-export default function TriageForm({ brands, categories, onSuccess, onCancel, isModal, technicians }: TriageFormProps) {
+export default function TriageForm({ brands: initialBrands, categories: initialCategories, onSuccess, onCancel, isModal, technicians, triageQuestions = [] }: TriageFormProps) {
     const t = useTranslations('Triage')
     const [state, formAction, isPending] = useActionState(createTicket, initialState)
     const [selectedCategory, setSelectedCategory] = useState<string>('')
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
+    const [priority, setPriority] = useState<string>('NORMAL')
+
+    // Local State for Lists (synced with props initially)
+    const [brands, setBrands] = useState<Brand[]>(initialBrands)
+    const [categories, setCategories] = useState<Category[]>(initialCategories)
 
     // Quick Add State
     const [isAddingBrand, setIsAddingBrand] = useState(false)
@@ -38,7 +45,7 @@ export default function TriageForm({ brands, categories, onSuccess, onCancel, is
     const [newCategoryName, setNewCategoryName] = useState('')
     const [newCategoryPrefix, setNewCategoryPrefix] = useState('')
 
-    // Customer Search State
+    // ... (Customer Search State remains the same)
     const [searchQuery, setSearchQuery] = useState('')
     const [searchResults, setSearchResults] = useState<any[]>([])
     const [isSearching, setIsSearching] = useState(false)
@@ -74,14 +81,16 @@ export default function TriageForm({ brands, categories, onSuccess, onCancel, is
         const catId = parseInt(e.target.value)
         const cat = categories.find(c => c.id === catId)
         setSelectedCategory(cat ? cat.slug : '')
-        // Reset adding state if needed
+        setSelectedCategoryId(catId || null)
+        // Reset priority when category changes
+        setPriority('NORMAL')
     }
 
     const handleAddBrand = async () => {
         if (!newBrandName.trim()) return
         const res = await createBrand(newBrandName)
         if (res.brand) {
-            brands.push(res.brand)
+            setBrands(prev => [...prev, res.brand])
             setIsAddingBrand(false)
             setNewBrandName('')
         } else {
@@ -93,7 +102,7 @@ export default function TriageForm({ brands, categories, onSuccess, onCancel, is
         if (!newCategoryName.trim()) return
         const res = await createCategory(newCategoryName, newCategoryPrefix)
         if (res.category) {
-            categories.push(res.category)
+            setCategories(prev => [...prev, res.category])
             setIsAddingCategory(false)
             setNewCategoryName('')
             setNewCategoryPrefix('')
@@ -102,6 +111,31 @@ export default function TriageForm({ brands, categories, onSuccess, onCancel, is
             alert('Error creating category')
         }
     }
+
+    // Filter questions based on selection
+    const relevantQuestions = triageQuestions.filter(q =>
+        q.categoryId === null || (selectedCategoryId && q.categoryId === selectedCategoryId)
+    )
+
+    const handleQuestionChange = (e: React.ChangeEvent<HTMLInputElement>, triggerPriority: string) => {
+        // Simple logic: If checking a HIGH priority item, set priority to HIGH.
+        // In a real app, we might want to recalculate based on *all* checked items.
+        // For now, let's keep it simple: If any HIGH is checked, it's HIGH.
+
+        // Use timeout to allow state update or form data inspection if needed,
+        // but since we derive purely visual priority here, we can just check inputs.
+
+        const form = e.target.closest('form')
+        if (form) {
+            const highTriggers = Array.from(form.querySelectorAll('input[data-priority="HIGH"]:checked'))
+            const mediumTriggers = Array.from(form.querySelectorAll('input[data-priority="MEDIUM"]:checked'))
+
+            if (highTriggers.length > 0) setPriority('HIGH')
+            else if (mediumTriggers.length > 0) setPriority('MEDIUM')
+            else setPriority('NORMAL')
+        }
+    }
+
 
     if (state.whatsappUrl) {
         return (
@@ -320,7 +354,7 @@ export default function TriageForm({ brands, categories, onSuccess, onCancel, is
                                     value={newBrandName}
                                     onChange={e => setNewBrandName(e.target.value)}
                                     placeholder="Nueva Marca"
-                                    className="w-full p-2.5 bg-white border rounded-lg focus:ring-2 focus:ring-green-500"
+                                    className="flex-1 p-2.5 bg-white border rounded-lg focus:ring-2 focus:ring-green-500"
                                     autoFocus
                                 />
                                 <button type="button" onClick={handleAddBrand} className="px-3 bg-green-600 text-white rounded-lg hover:bg-green-700">OK</button>
@@ -364,64 +398,57 @@ export default function TriageForm({ brands, categories, onSuccess, onCancel, is
                 </div>
             </div>
 
-            {technicians && technicians.length > 0 && (
-                <div className="mb-6">
-                    <h3 className="text-lg font-medium mb-3 text-gray-700 dark:text-gray-300 border-b pb-1 dark:border-zinc-800">Asignación (Opcional)</h3>
+            {/* Technician Assignment */}
+            <div className="mb-6">
+                <h3 className="text-lg font-medium mb-3 text-gray-700 dark:text-gray-300 border-b pb-1 dark:border-zinc-800">Asignación (Opcional)</h3>
+
+                {technicians && technicians.length > 0 ? (
                     <select name="technicianId" className="w-full p-2.5 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
                         <option value="">-- Sin Asignar --</option>
                         {technicians.map((tech: any) => (
-                            <option key={tech.id} value={tech.id}>{tech.name} ({(tech.tickets?.length || 0)} activos)</option>
+                            <option key={tech.id} value={tech.id}>
+                                {tech.name} ({tech.role === 'ADMIN' ? 'Admin' : 'Técnico'}) - {tech.tickets?.length || 0} tickets
+                            </option>
                         ))}
                     </select>
+                ) : (
+                    <div className="p-3 bg-yellow-50 text-yellow-700 rounded-lg text-sm border border-yellow-200">
+                        No hay técnicos registrados. Ve a la sección de técnicos para agregar uno.
+                    </div>
+                )}
+            </div>
+
+            {/* Conditional Questions */}
+            {(relevantQuestions.length > 0) && (
+                <div className="mb-6 bg-gray-50 dark:bg-zinc-800 p-4 rounded-md border border-gray-100 dark:border-zinc-700">
+                    <div className="flex justify-between items-center mb-3">
+                        <h3 className="text-sm font-bold uppercase text-gray-500">Checklist de Diagnóstico</h3>
+                        {priority === 'HIGH' && <span className="text-xs font-bold bg-red-100 text-red-600 px-2 py-1 rounded animate-pulse">ALTA PRIORIDAD RECOMENDADA</span>}
+                        {priority === 'MEDIUM' && <span className="text-xs font-bold bg-yellow-100 text-yellow-600 px-2 py-1 rounded">Prioridad Media</span>}
+                    </div>
+
+                    <div className="space-y-2">
+                        {relevantQuestions.map(q => (
+                            <label key={q.id} className={`flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded cursor-pointer transition ${q.triggerPriority === 'HIGH' ? 'border-l-4 border-l-transparent hover:border-l-red-500' : ''}`}>
+                                <input
+                                    type="checkbox"
+                                    name={`question_${q.id}`}
+                                    value={q.text}
+                                    data-priority={q.triggerPriority}
+                                    onChange={(e) => handleQuestionChange(e, q.triggerPriority)}
+                                    className={`w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 ${q.triggerPriority === 'HIGH' ? 'text-red-600 focus:ring-red-500' : ''}`}
+                                />
+                                <span className={q.triggerPriority === 'HIGH' ? 'font-medium text-red-700 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}>
+                                    {q.text} {q.triggerPriority === 'HIGH' && '🔥'}
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                    {/* Hidden input to pass calculated priority suggestion to server if we wanted,
+                        but server actions can also verify this. For now let's just rely on the questions being sent. */}
                 </div>
             )}
 
-            {/* Conditional Questions */}
-            {selectedCategory && (
-                <div className="mb-6 bg-gray-50 dark:bg-zinc-800 p-4 rounded-md border border-gray-100 dark:border-zinc-700">
-                    <h3 className="text-sm font-bold uppercase text-gray-500 mb-3">Checklist de Diagnóstico</h3>
-                    <div className="space-y-2">
-                        {/* Neveras */}
-                        {(selectedCategory === 'neveras') && (
-                            <>
-                                <label className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded cursor-pointer transition">
-                                    <input type="checkbox" name="triage_cools" className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /> ❌ No enfría nada
-                                </label>
-                                <label className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded cursor-pointer transition">
-                                    <input type="checkbox" name="triage_partial_failure" className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /> ❄️ Enfría poco (Congelador sí, Refri no)
-                                </label>
-                                <label className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded cursor-pointer transition">
-                                    <input type="checkbox" name="triage_leak" className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /> 💧 Fuga de agua interna
-                                </label>
-                                <label className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded cursor-pointer transition">
-                                    <input type="checkbox" name="triage_loud_noise" className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /> 🔊 Ruidos fuertes (Compresor/Ventilador)
-                                </label>
-                            </>
-                        )}
-                        {/* Lavadoras */}
-                        {(selectedCategory === 'lavadoras') && (
-                            <>
-                                <label className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded cursor-pointer transition">
-                                    <input type="checkbox" name="triage_leak" className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /> 💧 Tira agua por debajo
-                                </label>
-                                <label className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded cursor-pointer transition">
-                                    <input type="checkbox" name="triage_spin_fail" className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /> 🌀 No exprime / centrifugado débil
-                                </label>
-                                <label className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded cursor-pointer transition">
-                                    <input type="checkbox" name="triage_noise" className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /> 🔊 Golpeteo fuerte al centrifugar
-                                </label>
-                            </>
-                        )}
-                        {/* Generic/Others */}
-                        <label className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded cursor-pointer transition">
-                            <input type="checkbox" name="triage_power" className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" /> 🔌 No enciende / Muerto totalmente
-                        </label>
-                        <label className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded cursor-pointer transition">
-                            <input type="checkbox" name="triage_sparks" className="w-5 h-5 text-red-600 border-red-500 focus:ring-red-500" /> 🔥 Saca chispas / Olor a quemado (URGENTE)
-                        </label>
-                    </div>
-                </div>
-            )}
 
             {/* Description */}
             <div className="mb-6">

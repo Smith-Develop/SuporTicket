@@ -9,9 +9,10 @@ type Props = {
     brands: any[]
     categories: any[]
     technicians?: any[] // Optional to not break other usages if any
+    triageQuestions: any[]
 }
 
-export default function AdminDashboardClient({ brands, categories, technicians = [] }: Props) {
+export default function AdminDashboardClient({ brands, categories, technicians = [], triageQuestions }: Props) {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const router = useRouter()
 
@@ -40,9 +41,13 @@ export default function AdminDashboardClient({ brands, categories, technicians =
                             brands={brands}
                             categories={categories}
                             technicians={technicians}
-                            isModal={true}
+                            triageQuestions={triageQuestions}
+                            onSuccess={() => {
+                                setIsModalOpen(false)
+                                // Trigger refresh if needed
+                            }}
                             onCancel={() => setIsModalOpen(false)}
-                            onSuccess={handleSuccess}
+                            isModal={true}
                         />
                     </div>
                 </div>

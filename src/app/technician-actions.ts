@@ -1,9 +1,11 @@
 'use server'
 
-import { db } from '@/lib/db'
+import { localDb } from '@/lib/db'
+import { getServicesDb } from '@/lib/services-db'
 import { revalidatePath } from 'next/cache'
 
 export async function updateTicketStatus(ticketId: string, status: string) {
+    const db = await getServicesDb()
     try {
         await db.ticket.update({
             where: { id: ticketId },
@@ -24,7 +26,7 @@ export async function uploadPhoto(ticketId: string, formData: FormData) {
     try {
         // 1. Get Settings & Credentials
         // @ts-ignore
-        const settings = await db.companySettings.findFirst()
+        const settings = await localDb.companySettings.findFirst()
 
         if (!settings?.cloudinaryCloudName || !settings?.cloudinaryApiKey || !settings?.cloudinaryApiSecret) {
             console.error('Missing Cloudinary Credentials')
@@ -58,6 +60,7 @@ export async function uploadPhoto(ticketId: string, formData: FormData) {
         })
 
         // 5. Save to DB
+        const db = await getServicesDb()
         await db.photo.create({
             data: {
                 ticketId,
@@ -76,6 +79,7 @@ export async function uploadPhoto(ticketId: string, formData: FormData) {
 }
 
 export async function updateTicketCancellation(ticketId: string, reason: string) {
+    const db = await getServicesDb()
     try {
         await db.ticket.update({
             where: { id: ticketId },
@@ -94,6 +98,7 @@ export async function updateTicketCancellation(ticketId: string, reason: string)
 }
 
 export async function updateTicketCosts(ticketId: string, labor: number, parts: number) {
+    const db = await getServicesDb()
     try {
         await db.ticket.update({
             where: { id: ticketId },
@@ -111,6 +116,7 @@ export async function updateTicketCosts(ticketId: string, labor: number, parts: 
 }
 
 export async function updateTicketClosingData(ticketId: string, notes: string, isRepaired: boolean) {
+    const db = await getServicesDb()
     try {
         await db.ticket.update({
             where: { id: ticketId },
@@ -128,6 +134,7 @@ export async function updateTicketClosingData(ticketId: string, notes: string, i
 }
 
 export async function saveSignature(ticketId: string, signatureData: string) {
+    const db = await getServicesDb()
     try {
         await db.ticket.update({
             where: { id: ticketId },

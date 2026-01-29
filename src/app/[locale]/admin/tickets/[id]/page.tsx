@@ -1,8 +1,10 @@
-import { db } from '@/lib/db'
+import { getServicesDb } from '@/lib/services-db'
+import { localDb } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import TicketDetailClient from '@/components/admin/TicketDetailClient'
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const db = await getServicesDb()
     const { id } = await params
     console.log('Fetching ticket with ID:', id)
     const ticket = await db.ticket.findUnique({
@@ -25,7 +27,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     })
 
     // @ts-ignore
-    const settings = await db.companySettings.findFirst()
+    const settings = await localDb.companySettings.findFirst()
 
     return <TicketDetailClient ticket={ticket} technicians={technicians} settings={settings} />
 }

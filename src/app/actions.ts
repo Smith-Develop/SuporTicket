@@ -2,8 +2,11 @@
 
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 export async function createTicket(prevState: any, formData: FormData) {
+    // const db = await getServicesDb() // No longer needed
+
     const brandId = parseInt(formData.get('brandId') as string)
     const categoryId = parseInt(formData.get('categoryId') as string)
     const customerName = formData.get('customerName') as string
@@ -21,18 +24,52 @@ export async function createTicket(prevState: any, formData: FormData) {
 
     // Triage Data (Questions)
     const triageDataRaw: Record<string, boolean> = {}
+    const triageAnswers: string[] = [] // Array to store text of answered questions for context
+    let priority = 'LOW'
+
+    // Parse formData for triage questions (format: question_ID)
+    const questionIds: number[] = []
+
     for (const [key, value] of formData.entries()) {
-        if (key.startsWith('triage_')) {
-            triageDataRaw[key.replace('triage_', '')] = value === 'on'
+        if (key.startsWith('question_')) {
+            const qId = parseInt(key.replace('question_', ''))
+            if (!isNaN(qId) && value) {
+                questionIds.push(qId)
+                // We also store the text value sent from client for immediate display, 
+                // though fetching from DB is safer for priority logic.
+                triageAnswers.push(value as string)
+            }
         }
     }
 
-    // Automatic Prioritization Logic
-    let priority = 'LOW'
-    if (triageDataRaw['gas_leak'] || triageDataRaw['water_leak'] || triageDataRaw['short_circuit']) {
-        priority = 'HIGH'
-    } else if (triageDataRaw['partial_failure'] || triageDataRaw['loud_noise']) {
-        priority = 'MEDIUM'
+    // specific hardcoded triage for backward compatibility if any left
+    for (const [key, value] of formData.entries()) {
+        if (key.startsWith('triage_') && value === 'on') {
+            triageDataRaw[key] = true
+        }
+    }
+
+    // Verify priorities against DB
+    if (questionIds.length > 0) {
+        // @ts-ignore: Prisma client type generation might be lagging
+        const questions = await db.triageQuestion.findMany({
+            where: { id: { in: questionIds } }
+        })
+
+        // Determine max priority
+        for (const q of questions) {
+            // @ts-ignore
+            if (q.triggerPriority === 'HIGH') priority = 'HIGH'
+            // @ts-ignore
+            else if (q.triggerPriority === 'MEDIUM' && priority !== 'HIGH') priority = 'MEDIUM'
+        }
+    } else {
+        // Fallback to legacy hardcoded logic if no dynamic questions used
+        if (triageDataRaw['gas_leak'] || triageDataRaw['water_leak'] || triageDataRaw['short_circuit'] || triageDataRaw['sparks']) {
+            priority = 'HIGH'
+        } else if (triageDataRaw['partial_failure'] || triageDataRaw['loud_noise']) {
+            priority = 'MEDIUM'
+        }
     }
 
     try {
@@ -41,18 +78,19 @@ export async function createTicket(prevState: any, formData: FormData) {
         const documentNumber = formData.get('documentNumber') as string
         const model = formData.get('model') as string
         const serialNumber = formData.get('serialNumber') as string
+        // ... (rest of customer logic same as before)
 
         let customerIdMatch = null
 
         if (customerIdInput) {
             customerIdMatch = customerIdInput
-            // Optional: Update existing customer address if needed, skipping for now to preserve history preference
         } else {
             // Try find by phone OR document
             const existingCustomer = await db.customer.findFirst({
                 where: {
                     OR: [
                         { phone: customerPhone },
+                        // @ts-ignore: Prisma type lagging for documentNumber
                         ...(documentNumber ? [{ documentNumber }] : [])
                     ]
                 }
@@ -66,6 +104,7 @@ export async function createTicket(prevState: any, formData: FormData) {
                         name: customerName,
                         phone: customerPhone,
                         address: `${addressStreet}, ${addressColony}, ${addressCity}`,
+                        // @ts-ignore
                         documentNumber: documentNumber || null
                     }
                 })
@@ -73,7 +112,6 @@ export async function createTicket(prevState: any, formData: FormData) {
             }
         }
 
-        // Sequential Number Logic
         // Sequential Number Logic
         // @ts-ignore: Prisma Client lagging
         const lastTicket = await db.ticket.findFirst({
@@ -95,7 +133,7 @@ export async function createTicket(prevState: any, formData: FormData) {
                 propertyType,
                 issueDescription,
                 priority,
-                triageData: JSON.stringify(triageDataRaw),
+                triageData: JSON.stringify({ ...triageDataRaw, answeredQuestions: triageAnswers }),
                 technicianId: technicianId || null,
                 customerId: customerIdMatch,
                 model: model || '',
@@ -109,12 +147,16 @@ export async function createTicket(prevState: any, formData: FormData) {
         })
 
         // Fetch Settings for Global Config
+        // @ts-ignore
         const settings = await db.companySettings.findFirst()
         const countryCode = settings?.countryCode || '34'
         const defaultPhone = settings?.phone || '000000000'
 
         // Incident Summary for WhatsApp
-        const incidents = Object.keys(triageDataRaw).filter(k => triageDataRaw[k]).join(', ')
+        const legacyIncidents = Object.keys(triageDataRaw).filter(k => triageDataRaw[k]).join(', ')
+        const questionsSummary = triageAnswers.join(', ')
+        const combinedDetails = [questionsSummary, legacyIncidents].filter(Boolean).join(' | ')
+
         const typeLabel = propertyType === 'RESIDENTIAL' ? 'Casa' : 'Negocio'
 
         // Construct WhatsApp Message
@@ -144,7 +186,7 @@ export async function createTicket(prevState: any, formData: FormData) {
 📍 ${addressStreet}, ${addressColony}, CP ${addressZip} (${typeLabel})
 ⚠️ *Prioridad ${priority}*
 🔧 ${issueDescription}
-📋 Detalles: ${incidents}
+📋 Checklist: ${combinedDetails || 'Sin detalles extra'}
 📱 Equipo: ${model || 'N/A'} (SN: ${serialNumber || 'N/A'})
 
 Link: https://suporticket.app/technician/${ticket.id}`

@@ -1,4 +1,4 @@
-import { db } from '@/lib/db'
+import { localDb } from '@/lib/db'
 import Link from 'next/link'
 import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
@@ -10,7 +10,7 @@ export default async function AdminLayout({ children, params }: { children: Reac
 
     // Fetch Settings
     // @ts-ignore
-    const settings = await db.companySettings.findFirst()
+    const settings = await localDb.companySettings.findFirst()
 
     if (!session || session.role !== 'ADMIN') {
         redirect('/technician') // Or login

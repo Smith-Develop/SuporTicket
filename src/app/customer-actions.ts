@@ -1,8 +1,9 @@
 'use server'
 
-import { db } from '@/lib/db'
+import { getServicesDb } from '@/lib/services-db'
 
 export async function searchCustomers(query: string) {
+    const db = await getServicesDb()
     if (!query || query.length < 2) return []
 
     const customers = await db.customer.findMany({
@@ -21,6 +22,7 @@ export async function searchCustomers(query: string) {
 }
 
 export async function updateCustomer(id: string, prevState: any, formData: FormData) {
+    const db = await getServicesDb()
     const name = formData.get('name') as string
     const phone = formData.get('phone') as string
     const email = formData.get('email') as string

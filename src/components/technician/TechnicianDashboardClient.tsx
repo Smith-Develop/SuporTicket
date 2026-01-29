@@ -20,7 +20,7 @@ type Ticket = {
     category: { name: string }
 }
 
-export default function TechnicianDashboardClient({ tickets, userName }: { tickets: Ticket[], userName: string }) {
+export default function TechnicianDashboardClient({ tickets, userName, userRole }: { tickets: Ticket[], userName: string, userRole: string }) {
     const t = useTranslations('Technician')
     const [activeTab, setActiveTab] = useState<'PENDING' | 'IN_PROGRESS' | 'FINISHED'>('PENDING')
 
@@ -57,6 +57,15 @@ export default function TechnicianDashboardClient({ tickets, userName }: { ticke
         PENDING: tickets.filter(t => t.status === 'PENDING').length,
         IN_PROGRESS: tickets.filter(t => t.status === 'IN_PROGRESS').length,
         FINISHED: tickets.filter(t => t.status === 'FINISHED').length
+    }
+
+    // --- Stats Calculation for Grid ---
+    const stats = {
+        total: tickets.length,
+        pending: tickets.filter(t => t.status === 'PENDING').length,
+        process: tickets.filter(t => t.status === 'IN_PROGRESS').length,
+        finished: tickets.filter(t => t.status === 'FINISHED').length,
+        cancelled: tickets.filter(t => t.status === 'CANCELLED').length,
     }
 
     const priorityColor = (p: string) => {
@@ -151,16 +160,73 @@ export default function TechnicianDashboardClient({ tickets, userName }: { ticke
         <div className="bg-gray-100 dark:bg-zinc-950 min-h-screen">
             {/* Header */}
             <div className="bg-white dark:bg-zinc-900 border-b dark:border-zinc-800 p-6 shadow-sm sticky top-0 z-10">
-                <div className="max-w-4xl mx-auto flex justify-between items-center">
+                <div className="max-w-4xl mx-auto flex justify-between items-center gap-4">
                     <div>
                         <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">SuporTicket Tech</h1>
                         <p className="text-gray-500 text-xs mt-1">Hola, {userName}</p>
                     </div>
-                    <form action={logoutAction}>
-                        <button className="p-2 bg-gray-100 dark:bg-zinc-800 rounded-lg hover:bg-gray-200 transition text-gray-600">
-                            <LogOut size={18} />
-                        </button>
-                    </form>
+
+                    <div className="flex items-center gap-2">
+                        {userRole === 'ADMIN' && (
+                            <Link
+                                href="/admin"
+                                className="hidden sm:flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-bold border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 transition"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shield"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></svg>
+                                Admin Panel
+                            </Link>
+                        )}
+                        <form action={logoutAction}>
+                            <button className="p-2 bg-gray-100 dark:bg-zinc-800 rounded-lg hover:bg-gray-200 transition text-gray-600">
+                                <LogOut size={18} />
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {/* Mobile Admin Button (visible only on small screens) */}
+                {userRole === 'ADMIN' && (
+                    <div className="sm:hidden mt-4">
+                        <Link
+                            href="/admin"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg text-sm font-bold border border-indigo-100 dark:border-indigo-800"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shield"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></svg>
+                            Ir a Dashboard Admin
+                        </Link>
+                    </div>
+                )}
+
+                {/* Stats Grid */}
+                <div className="max-w-4xl mx-auto mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-sm border-l-4 border-yellow-500 relative overflow-hidden">
+                        <div className="relative z-10">
+                            <h3 className="text-gray-500 text-xs font-bold uppercase tracking-wider">Pendientes</h3>
+                            <p className="text-2xl font-black mt-1">{stats.pending}</p>
+                        </div>
+                        <Clock className="absolute right-2 bottom-2 text-yellow-500 opacity-10 w-10 h-10" />
+                    </div>
+                    <div className="bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-sm border-l-4 border-blue-500 relative overflow-hidden">
+                        <div className="relative z-10">
+                            <h3 className="text-gray-500 text-xs font-bold uppercase tracking-wider">En Proceso</h3>
+                            <p className="text-2xl font-black mt-1">{stats.process}</p>
+                        </div>
+                        <PlayCircle className="absolute right-2 bottom-2 text-blue-500 opacity-10 w-10 h-10" />
+                    </div>
+                    <div className="bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-sm border-l-4 border-green-500 relative overflow-hidden">
+                        <div className="relative z-10">
+                            <h3 className="text-gray-500 text-xs font-bold uppercase tracking-wider">Finalizados</h3>
+                            <p className="text-2xl font-black mt-1">{stats.finished}</p>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-2 bottom-2 text-green-500 opacity-10 w-10 h-10 lucide lucide-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m9 11 3 3L22 4" /></svg>
+                    </div>
+                    <div className="bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-sm border-l-4 border-gray-400 relative overflow-hidden">
+                        <div className="relative z-10">
+                            <h3 className="text-gray-500 text-xs font-bold uppercase tracking-wider">Total</h3>
+                            <p className="text-2xl font-black mt-1">{stats.total}</p>
+                        </div>
+                        <Filter className="absolute right-2 bottom-2 text-gray-500 opacity-10 w-10 h-10" />
+                    </div>
                 </div>
 
                 {/* Tabs */}
