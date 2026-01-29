@@ -61,7 +61,19 @@ export function LandingHeader({ settings }: { settings: any }) {
     const locale = params?.locale || 'es'
 
     const whatsappLink = getWhatsAppLink(settings?.whatsappNumber)
-    const displayPhone = settings?.whatsappNumber || "912 345 678"
+
+    // Helper to format phone number
+    const formatPhoneNumber = (phone: string) => {
+        if (!phone) return "912 345 678"
+        // Validar si empieza por 34 y tiene longitud correcta para dar formato específico
+        if (phone.startsWith('34') && phone.length === 11) {
+            return `+${phone.slice(0, 2)} ${phone.slice(2, 5)} ${phone.slice(5, 7)} ${phone.slice(7)}`
+        }
+        // Fallback genérico: intentar poner espacios cada 3
+        return phone.replace(/(\d{2})(\d{3})(\d{3})(\d{3})/, '+$1 $2 $3 $4') // Basic fallback
+    }
+
+    const displayPhone = settings?.whatsappNumber ? formatPhoneNumber(settings.whatsappNumber) : "912 345 678"
 
     return (
         <header className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm py-2' : 'bg-transparent py-4'}`}>
