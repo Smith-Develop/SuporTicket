@@ -16,9 +16,13 @@ Diseñado pensando en la **movilidad** para los técnicos y el **control total**
 - **📱 App de Técnico 'Mobile First'**: Interfaz PWA-ready. Permite subir evidencias, gestionar estados y ver ingresos estimados. Diseño unificado con el panel de administración.
 - **⚡ Triage Inteligente**: Formulario de recepción con asignación inmediata de técnicos y generación automática de mensajes de bienvenida para WhatsApp.
 - **✍️ Firma Digital Integrada**: Captura la firma del cliente en pantalla táctil al momento de la entrega o aprobación de presupuesto.
-- **📄 Motor de Facturación PDF**: Generación instantánea de documentos profesionales (Presupuestos, Resguardos, Facturas) calculando automáticamente impuestos (IVA) y totales.
+- **📄 Motor de Facturación PDF Nativo**: Generación de PDFs directamente en el servidor (API Route) utilizando `@react-pdf/renderer` para documentos perfectos y ligeros. Enlace directo para WhatsApp sin pasos intermedios.
+- **⚖️ Gestión de Textos Legales**: CMS integrado en el panel de administración para actualizar Política de Privacidad, Términos y Garantía sin tocar código.
 - **☁️ Gestión de Evidencias (Cloudinary)**: Subida de fotos ilimitadas para documentar el estado "Inicial" y "Final" de la reparación, almacenadas de forma segura en la nube.
 - **📊 Dashboard Analítico**: Métricas en tiempo real sobre tickets pendientes, ingresos estimados, productividad técnica y tiempos de resolución.
+- **🛠️ Herramientas Administrativas**:
+    - **Reenvío de Mensajes**: Botón para reenviar la notificación de WhatsApp al técnico.
+    - **Seed de Emergencia**: Ruta `/api/seed` para recuperación de acceso administrador en desarrollo.
 - **🌍 Internacionalización (i18n)**: Arquitectura lista para soporte multi-idioma (Español por defecto).
 - **📦 Control de Inventario**: Gestión básica de marcas, modelos y categorías de dispositivos.
 

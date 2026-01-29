@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Clock, Filter, Calendar, DollarSign, User, MapPin, AlertCircle, PlayCircle } from 'lucide-react'
+import { Clock, Filter, Calendar, DollarSign, User, MapPin, AlertCircle, PlayCircle, Send } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale } from 'next-intl'
 import { formatTicketId } from '@/lib/utils'
@@ -86,9 +86,9 @@ export default function AdminTicketList({ tickets }: { tickets: any[] }) {
 
                 {/* Status Stripe */}
                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${ticket.status === 'PENDING' ? 'bg-gray-300' :
-                        ticket.status === 'IN_PROGRESS' ? 'bg-blue-500' :
-                            ticket.status === 'FINISHED' ? 'bg-green-500' :
-                                'bg-red-500' // Cancelled
+                    ticket.status === 'IN_PROGRESS' ? 'bg-blue-500' :
+                        ticket.status === 'FINISHED' ? 'bg-green-500' :
+                            'bg-red-500' // Cancelled
                     }`} />
 
                 {/* Header: Priority & Date */}
@@ -145,7 +145,27 @@ export default function AdminTicketList({ tickets }: { tickets: any[] }) {
                     </div>
 
                     {/* Footer */}
-                    <div className="mt-4 pt-3 border-t border-gray-50 dark:border-zinc-800 flex justify-end items-center">
+                    <div className="mt-4 pt-3 border-t border-gray-50 dark:border-zinc-800 flex justify-between items-center">
+                        <button
+                            onClick={async (e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                // Dynamic import or pass via props? 
+                                // Actually better to define this handler outside or here.
+                                // We need to import the action at top level.
+                                const { getResendTicketUrl } = await import('@/app/admin-actions')
+                                const res = await getResendTicketUrl(ticket.id)
+                                if (res.success && res.url) {
+                                    window.open(res.url, '_blank')
+                                } else {
+                                    alert('Error al generar enlace')
+                                }
+                            }}
+                            className="text-green-600 hover:text-green-700 font-semibold text-xs flex items-center gap-1 bg-green-50 hover:bg-green-100 px-2 py-1 rounded transition"
+                        >
+                            <Send size={12} /> Reenviar
+                        </button>
+
                         <span className="text-blue-600 font-semibold text-xs group-hover:translate-x-1 transition flex items-center gap-1">
                             Ver Detalles <PlayCircle size={12} />
                         </span>
@@ -180,8 +200,8 @@ export default function AdminTicketList({ tickets }: { tickets: any[] }) {
                                 key={f.k}
                                 onClick={() => setStatusFilter(f.k as StatusFilter)}
                                 className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap transition ${statusFilter === f.k
-                                        ? 'bg-white shadow text-blue-600 dark:bg-zinc-700 dark:text-blue-400'
-                                        : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-zinc-700'
+                                    ? 'bg-white shadow text-blue-600 dark:bg-zinc-700 dark:text-blue-400'
+                                    : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-zinc-700'
                                     }`}
                             >
                                 {f.l}
@@ -202,8 +222,8 @@ export default function AdminTicketList({ tickets }: { tickets: any[] }) {
                                 key={f.k}
                                 onClick={() => setTimeFilter(f.k as TimeFilter)}
                                 className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap transition ${timeFilter === f.k
-                                        ? 'bg-white shadow text-blue-600 dark:bg-zinc-700 dark:text-blue-400'
-                                        : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-zinc-700'
+                                    ? 'bg-white shadow text-blue-600 dark:bg-zinc-700 dark:text-blue-400'
+                                    : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-zinc-700'
                                     }`}
                             >
                                 {f.l}

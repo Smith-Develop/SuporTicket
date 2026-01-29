@@ -89,6 +89,7 @@ export default async function CatalogsPage({ searchParams, params }: { searchPar
                         onCreate={createBrand}
                         onUpdate={updateBrand}
                         onDelete={deleteBrand}
+                        imageFieldName="logoUrl"
                     />
                 )}
 
@@ -100,6 +101,8 @@ export default async function CatalogsPage({ searchParams, params }: { searchPar
                         onUpdate={updateCategory}
                         onDelete={deleteCategory}
                         hasPrefix={true}
+                        imageFieldName="imageUrl"
+                        heroImageFieldName="heroImageUrl"
                     />
                 )}
 

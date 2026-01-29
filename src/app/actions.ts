@@ -189,7 +189,7 @@ export async function createTicket(prevState: any, formData: FormData) {
 📋 Checklist: ${combinedDetails || 'Sin detalles extra'}
 📱 Equipo: ${model || 'N/A'} (SN: ${serialNumber || 'N/A'})
 
-Link: https://suporticket.app/technician/${ticket.id}`
+Link: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/technician/${ticket.id}`
 
         const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
 

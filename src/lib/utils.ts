@@ -4,3 +4,10 @@ export function formatTicketId(ticket: { id: string, ticketNumber?: number | nul
     }
     return ticket.id.slice(-6).toUpperCase()
 }
+
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs))
+}

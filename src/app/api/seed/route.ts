@@ -1,38 +1,28 @@
-
-import { db } from '@/lib/db'
-import { NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
+import { db } from "@/lib/db"
+import { NextResponse } from "next/server"
+import bcrypt from "bcryptjs"
 
 export async function GET() {
     try {
-        const existingAdmin = await db.user.findFirst({
-            where: { role: 'ADMIN' }
-        })
+        const hashedPassword = await bcrypt.hash("admin123", 10)
 
-        if (existingAdmin) {
-            return NextResponse.json({ message: 'Admin user already exists', user: existingAdmin.email })
-        }
-
-        const hashedPassword = await bcrypt.hash('admin123', 10)
-
-        const admin = await db.user.create({
-            data: {
-                name: 'Admin User',
-                email: 'admin@suporticket.com',
+        const admin = await db.user.upsert({
+            where: { email: "admin@suporticket.com" },
+            update: {
                 password: hashedPassword,
-                role: 'ADMIN',
-                phone: '000000000'
+                role: "ADMIN",
+                name: "Admin Principal"
+            },
+            create: {
+                email: "admin@suporticket.com",
+                name: "Admin Principal",
+                password: hashedPassword,
+                role: "ADMIN"
             }
         })
 
-        return NextResponse.json({
-            message: 'Admin user created successfully',
-            credentials: {
-                email: 'admin@suporticket.com',
-                password: 'admin123'
-            }
-        })
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json({ success: true, message: "Admin user seeded: admin@suporticket.com / admin123" })
+    } catch (error) {
+        return NextResponse.json({ success: false, error: "Failed to seed admin" }, { status: 500 })
     }
 }

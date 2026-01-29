@@ -11,8 +11,9 @@ export async function getBrands() {
 
 export async function createBrand(formData: FormData) {
     const name = formData.get('name') as string
+    const logoUrl = formData.get('logoUrl') as string
     try {
-        await db.brand.create({ data: { name } })
+        await db.brand.create({ data: { name, logoUrl } })
         revalidatePath('/', 'layout')
         return { success: true, message: 'Marca creada' }
     } catch (e) {
@@ -22,8 +23,9 @@ export async function createBrand(formData: FormData) {
 
 export async function updateBrand(id: number, formData: FormData) {
     const name = formData.get('name') as string
+    const logoUrl = formData.get('logoUrl') as string
     try {
-        await db.brand.update({ where: { id }, data: { name } })
+        await db.brand.update({ where: { id }, data: { name, logoUrl } })
         revalidatePath('/', 'layout')
         return { success: true, message: 'Marca actualizada' }
     } catch (e) {
@@ -51,9 +53,11 @@ export async function createCategory(formData: FormData) {
     const name = formData.get('name') as string
     const slug = name.toLowerCase().replace(/ /g, '-')
     const prefix = formData.get('prefix') as string || name.substring(0, 3).toUpperCase()
+    const imageUrl = formData.get('imageUrl') as string
+    const heroImageUrl = formData.get('heroImageUrl') as string
 
     try {
-        await db.category.create({ data: { name, slug, prefix } })
+        await db.category.create({ data: { name, slug, prefix, imageUrl, heroImageUrl } })
         revalidatePath('/', 'layout')
         return { success: true, message: 'Categoría creada' }
     } catch (e) {
@@ -64,9 +68,11 @@ export async function createCategory(formData: FormData) {
 export async function updateCategory(id: number, formData: FormData) {
     const name = formData.get('name') as string
     const prefix = formData.get('prefix') as string
+    const imageUrl = formData.get('imageUrl') as string
+    const heroImageUrl = formData.get('heroImageUrl') as string
 
     try {
-        await db.category.update({ where: { id }, data: { name, prefix } })
+        await db.category.update({ where: { id }, data: { name, prefix, imageUrl, heroImageUrl } })
         revalidatePath('/', 'layout')
         return { success: true, message: 'Categoría actualizada' }
     } catch (e) {

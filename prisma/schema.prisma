@@ -8,16 +8,23 @@ generator client {
 }
 
 model Brand {
-  id      Int      @id @default(autoincrement())
-  name    String   @unique
-  tickets Ticket[]
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  logoUrl   String?  @default("") // Cloudinary URL
+  showOnWeb Boolean  @default(true)
+  tickets   Ticket[]
 }
 
 model Category {
   id             Int              @id @default(autoincrement())
   name           String           @unique
   slug           String           @unique
+  description    String?          @default("") // For SEO and Service Cards
+  descriptionEn  String?          @default("") // English Description
+  isActive       Boolean          @default(true) // Control visibility on Landing Page
   prefix         String           @default("GEN") // For Ticket ID (e.g. LV, AI)
+  imageUrl       String?          @default("") // Service Detail Image
+  heroImageUrl   String?          @default("") // Specific Hero Background
   tickets        Ticket[]
   TriageQuestion TriageQuestion[]
 }
@@ -144,6 +151,60 @@ model CompanySettings {
 
   // External Database
   externalDbUrl String @default("")
+
+  updatedAt DateTime @updatedAt
+}
+
+model SiteSettings {
+  id Int @id @default(1)
+
+  // Identity
+  companyName String  @default("SuporTicket")
+  logoUrl     String? @default("") // Cloudinary
+  faviconUrl  String? @default("") // Cloudinary
+
+  // Contact
+  emergencyPhone String  @default("")
+  whatsappNumber String  @default("") // E.g., +34600000000
+  supportEmail   String  @default("")
+  address        String  @default("")
+  googleMapUrl   String? @default("")
+
+  // Social Media
+  facebookUrl  String? @default("")
+  instagramUrl String? @default("")
+  twitterUrl   String? @default("")
+  linkedinUrl  String? @default("")
+
+  // Visual/Branding
+  primaryColor   String @default("#0f172a") // Slate-900
+  secondaryColor String @default("#3b82f6") // Blue-500
+  fontFamily     String @default("Inter") // Google Font Name
+
+  // SEO Global
+  metaTitle       String? @default("Servicio Técnico Oficial")
+  metaDescription String? @default("Reparación de electrodomésticos y dispositivos electrónicos.")
+  googleAnalyticsId String? @default("")
+  facebookPixelId   String? @default("")
+
+  // Content: Hero Section
+  heroTitle       String  @default("Reparación Experta en Tu Ciudad")
+  heroTitleEn     String? @default("Expert Repair in Your City")
+  heroSubtitle    String  @default("Técnicos certificados a tu disposición inmediata.")
+  heroSubtitleEn  String? @default("Certified technicians at your immediate disposal.")
+  heroImageUrl    String? @default("") // Background image
+
+  // Content: About Section
+  aboutTitle      String  @default("Sobre Nosotros")
+  aboutTitleEn    String? @default("About Us")
+  aboutText       String  @default("Somos líderes en servicio técnico con más de 10 años de experiencia.")
+  aboutTextEn     String? @default("We are leaders in technical service with over 10 years of experience.")
+  aboutImageUrl   String? @default("")
+
+  // Content: Legal
+  privacyPolicy    String? @default("Contenido de Política de Privacidad pendiente.")
+  termsConditions  String? @default("Contenido de Términos y Condiciones pendiente.")
+  warrantyPolicy   String? @default("Contenido de Garantía pendiente.")
 
   updatedAt DateTime @updatedAt
 }

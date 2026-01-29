@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import SignatureCanvas from 'react-signature-canvas'
 import jsPDF from 'jspdf'
 import { X, Download, Loader2, Share2 } from 'lucide-react'
+import { useParams } from 'next/navigation'
 // Import the server action proxy
 import { saveSignature, getBase64Logo } from '@/app/technician-actions'
 
@@ -304,12 +305,20 @@ export default function InvoiceModal({ ticket, settings, onClose }: { ticket: Ti
         }
     }
 
+    const params = useParams()
+    const locale = params?.locale || 'es'
+
     const sendWhatsApp = () => {
         const subtotal = ticket.laborCost + ticket.partsCost
         const ivaAmount = ticket.includeIva ? (subtotal * ticket.ivaRate) : 0
         const total = subtotal + ivaAmount
 
-        const message = `Hola ${invoiceName}, adjunto su reporte (${ticket.brand.name}). Total: €${total.toFixed(2)} (IVA incluido).`
+        const invoiceUrl = `${window.location.origin}/api/invoice/${ticket.id}`
+
+        const message = `Hola ${invoiceName}, adjunto su reporte (${ticket.brand.name}). Total: €${total.toFixed(2)} (IVA incluido).
+        
+📄 Ver Factura PDF:
+${invoiceUrl}`
         const url = `https://wa.me/${ticket.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`
         window.open(url, '_blank')
     }
